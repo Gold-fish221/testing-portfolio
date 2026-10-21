@@ -1,0 +1,319 @@
+{
+  "info": {
+    "name": "若依 RuoYi 接口测试（正向+负向+安全）",
+    "description": "本地部署的 RuoYi 4.8.3 开源管理系统接口测试集合。执行顺序：先运行 01 登录建立会话，再运行 02 查用户列表；03-06 为负向/安全用例。06 未认证用例执行前需清空 Cookies（Cookies 管理 → localhost → 删除）。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 登录-成功",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+              "const d = pm.response.json();",
+              "pm.test(\"登录成功 code=0\", () => pm.expect(d.code).to.eql(0));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "username",
+              "value": "admin",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "admin123",
+              "type": "text"
+            },
+            {
+              "key": "rememberMe",
+              "value": "false",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/login",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "login"
+          ]
+        },
+        "description": "正向：正确账号密码登录，建立 JSESSIONID 会话"
+      },
+      "response": []
+    },
+    {
+      "name": "02 用户列表-带会话",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+              "const d = pm.response.json();",
+              "pm.test(\"code=0\", () => pm.expect(d.code).to.eql(0));",
+              "pm.test(\"有数据\", () => pm.expect(d.rows.length).to.be.above(0));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "pageNum",
+              "value": "1",
+              "type": "text"
+            },
+            {
+              "key": "pageSize",
+              "value": "5",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/system/user/list",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "system",
+            "user",
+            "list"
+          ]
+        },
+        "description": "正向：携带 01 的 Cookie 查询用户列表（Postman 自动管理 Cookie）"
+      },
+      "response": []
+    },
+    {
+      "name": "03 登录-错误密码",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+              "const d = pm.response.json();",
+              "pm.test(\"登录失败 code=500\", () => pm.expect(d.code).to.eql(500));",
+              "pm.test(\"提示与密码/用户相关\", () => pm.expect(d.msg).to.match(/密码|用户/));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "username",
+              "value": "admin",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "wrong_pwd",
+              "type": "text"
+            },
+            {
+              "key": "rememberMe",
+              "value": "false",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/login",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "login"
+          ]
+        },
+        "description": "负向：错误密码应返回失败，且提示与密码/用户相关"
+      },
+      "response": []
+    },
+    {
+      "name": "04 登录-空用户名",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+              "const d = pm.response.json();",
+              "pm.test(\"空用户名登录失败\", () => pm.expect(d.code).to.eql(500));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "username",
+              "value": "",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "admin123",
+              "type": "text"
+            },
+            {
+              "key": "rememberMe",
+              "value": "false",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/login",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "login"
+          ]
+        },
+        "description": "负向：空用户名应登录失败"
+      },
+      "response": []
+    },
+    {
+      "name": "05 登录-SQL注入",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const d = pm.response.json();",
+              "pm.test(\"注入不能登录成功\", () => pm.expect(d.code).to.not.eql(0));",
+              "pm.test(\"code=500\", () => pm.expect(d.code).to.eql(500));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "username",
+              "value": "' or 1=1 --",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "admin123",
+              "type": "text"
+            },
+            {
+              "key": "rememberMe",
+              "value": "false",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/login",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "login"
+          ]
+        },
+        "description": "安全：注入载荷不能登录成功（参数化查询防护验证）"
+      },
+      "response": []
+    },
+    {
+      "name": "06 用户列表-未认证",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"返回的是登录页\", () => pm.expect(pm.response.text()).to.include(\"登录\"));",
+              "pm.test(\"不是用户数据\", () => {",
+              "  const ok = pm.response.text().includes('\"rows\"');",
+              "  pm.expect(ok).to.be.false;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "pageNum",
+              "value": "1",
+              "type": "text"
+            },
+            {
+              "key": "pageSize",
+              "value": "5",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/system/user/list",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "system",
+            "user",
+            "list"
+          ]
+        },
+        "description": "安全：无会话访问应被拦截跳转登录页。执行前先清空 Cookies"
+      },
+      "response": []
+    }
+  ]
+}
